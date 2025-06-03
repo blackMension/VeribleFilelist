@@ -1,0 +1,9 @@
+abandon
+verible
+cache
+**__pycache__**
+**.ipynb
+**.log
+**.log.*
+**.tar.gz
+**.tar.gz.*
