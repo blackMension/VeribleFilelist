@@ -22,7 +22,11 @@ else
     wget https://github.com/chipsalliance/verible/releases/download/${version}/verible-${version}-${OS}.tar.gz
     tar -zxvf verible-${version}-${OS}.tar.gz
     rm verible-${version}-${OS}.tar.gz
-    mv verible-${version}-${OS} verible
+    if [ "$(uname -s)" = "Darwin" ]; then
+        mv verible-${version}-${OS} verible
+    else
+        mv verible-${version} verible
+    fi
     touch ./verible/.version
     echo ${version} > ./verible/.version
 fi
