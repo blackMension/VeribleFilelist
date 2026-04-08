@@ -341,6 +341,9 @@ def get_incdir_by_module(top_module: str, dict_module_references, dict_module_in
                 status = False ;continue
             dfs(reference)
         for the_include in dict_module_includes[module]:
+            if the_include not in dict_include_dir:
+                print(f"[WARNING] Include file '{the_include}' not found in dict_include_dir, skipping...")
+                continue
             if dict_include_dir[the_include] not in incdir_set:
                 incdir_list.append(dict_include_dir[the_include])
                 incdir_set.add(dict_include_dir[the_include])
@@ -353,7 +356,8 @@ def get_incdir_by_module(top_module: str, dict_module_references, dict_module_in
 
 class Database():
     def __init__(self, path_list=["../../src", "../../lib/CustomLibrary/verilog/src"], defines={}):
-        self.current_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+        # 路径相对于当前工作目录，而不是 database.py 所在目录
+        self.current_path = os.getcwd()
         self.path_list = [os.path.abspath(os.path.join(self.current_path, p)) for p in path_list]
         self.parse = parser
         self.defines = defines
@@ -381,11 +385,30 @@ class Database():
         the_incdir = ["+incdir+"+i for i in the_incdir ]
         return the_incdir + the_filelist, status
     
-    def generate_filelist_file( self, top_module:str, save_dir="" ):
-        save_dir = PATH_FILELIST if save_dir == None or save_dir == "" else save_dir
+    def generate_filelist_file( self, top_module:str, save_dir="", use_relative_path=True ):
+        # save_dir 为空时，使用当前工作目录（而不是硬编码的 PATH_FILELIST）
+        if save_dir == None or save_dir == "":
+            save_dir = os.getcwd()
         os.makedirs(save_dir, exist_ok=True)
         path_save = os.path.abspath(os.path.join(save_dir, f"{top_module}.f"))
         filelist, status = self.get_filelist_by_module( top_module )
+        
+        # 如果需要生成相对路径，计算 filelist 文件到各个文件的相对路径
+        if use_relative_path:
+            filelist_dir = os.path.dirname(path_save)
+            converted_filelist = []
+            for item in filelist:
+                if item.startswith("+incdir+"):
+                    # 处理 incdir 路径
+                    incdir_path = item[8:]  # 去掉 "+incdir+" 前缀
+                    rel_path = os.path.relpath(incdir_path, filelist_dir)
+                    converted_filelist.append("+incdir+" + rel_path)
+                else:
+                    # 处理普通文件路径
+                    rel_path = os.path.relpath(item, filelist_dir)
+                    converted_filelist.append(rel_path)
+            filelist = converted_filelist
+        
         with open(path_save, "w") as f:
             for file in filelist:
                 f.write(file + "\n")

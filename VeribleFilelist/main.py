@@ -49,7 +49,7 @@ def parse_arguments():
         '-p', '--path-save',
         type=str,
         required=False,
-        help="Save Path."
+        help="Save Path. Default is current working directory."
     )
     parser.add_argument(
         '-s', '--search-paths',
@@ -64,6 +64,12 @@ def parse_arguments():
         required=False,
         help="List of defines."
     )
+    parser.add_argument(
+        '--absolute-path',
+        required=False,
+        action="store_true",
+        help="Use absolute paths in filelist instead of relative paths."
+    )
     args = parser.parse_args()
     if args.defines is not None:
         new_defines = parse_vcs_defines(args.defines)
@@ -75,17 +81,19 @@ def main(args):
     if args.topmodule is None and args.clean_filelist is None:
         print("Please specify the top module or clean filelist.")
         sys.exit(1)
-    
+
     if args.clean_filelist is not None or args.topmodule is not None or args.build_database is not None:
         db = Database(args.search_paths, defines)
 
     if args.topmodule is not None:
         db.update_conditional_modules(args.topmodule)
-        db.generate_filelist_file(args.topmodule, args.path_save)
-        
+        # 根据 --absolute-path 参数决定是否使用相对路径
+        use_relative_path = not args.absolute_path
+        db.generate_filelist_file(args.topmodule, args.path_save, use_relative_path=use_relative_path)
+
     if args.clean_filelist :
         db.clean_filelist_file(args.path_save)
-        
+
     if args.build_database:
         db.build_database()
 
