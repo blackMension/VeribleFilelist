@@ -235,7 +235,7 @@ def traverse_directory(directory):
                 file_path = os.path.join(dirpath, the_file)
                 absolute_file_path = os.path.abspath(file_path)
                 save_list.append((the_file,absolute_file_path))
-            elif the_file.endswith('.svh'):
+            elif the_file.endswith('.svh') or the_file.endswith('.h') or the_file.endswith('.vh'):
                 file_path = os.path.join(dirpath, the_file)
                 absolute_file_path = os.path.abspath(file_path)
                 dir_path = os.path.abspath(dirpath)
